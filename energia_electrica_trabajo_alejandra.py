@@ -177,36 +177,42 @@ def construir_grafo_networkx(grafo):
 
 
 def dibujar_grafo_general(grafo, resultados):
-    """
-    Dibuja el grafo completo, coloreando los nodos según la energía final.
-    """
+    import matplotlib.pyplot as plt
+    import networkx as nx
+
     G = construir_grafo_networkx(grafo)
     pos = nx.spring_layout(G, seed=42)
 
     energia_por_ciudad = {r["ciudad"]: r["energia_final"] for r in resultados}
     energias = [energia_por_ciudad[n] for n in G.nodes()]
 
-    plt.figure(figsize=(10, 7))
-    nx.draw_networkx_nodes(
+    # Crear figura y ejes explícitamente
+    fig, ax = plt.subplots(figsize=(10, 7))
+
+    # Dibujar nodos
+    nodos = nx.draw_networkx_nodes(
         G, pos,
         node_size=800,
         node_color=energias,
-        cmap=plt.cm.plasma
+        cmap=plt.cm.plasma,
+        ax=ax
     )
-    nx.draw_networkx_labels(G, pos, font_size=9, font_weight="bold")
-    nx.draw_networkx_edges(G, pos, arrowstyle="->", arrowsize=15)
+
+    nx.draw_networkx_labels(G, pos, font_size=9, font_weight="bold", ax=ax)
+    nx.draw_networkx_edges(G, pos, arrowstyle="->", arrowsize=15, ax=ax)
     nx.draw_networkx_edge_labels(
         G, pos,
         edge_labels=nx.get_edge_attributes(G, "weight"),
-        font_size=8
+        font_size=8,
+        ax=ax
     )
 
-    cbar = plt.colorbar(plt.cm.ScalarMappable(cmap=plt.cm.plasma),
-                        shrink=0.8)
+    # Colorbar correctamente asociado al eje
+    cbar = fig.colorbar(nodos, ax=ax, shrink=0.8)
     cbar.set_label("Energía final aproximada (MWh)")
 
-    plt.title("Red de distribución eléctrica – Energía en cada ciudad")
-    plt.axis("off")
+    ax.set_title("Red de distribución eléctrica – Energía en cada ciudad")
+    ax.set_axis_off()
     plt.tight_layout()
     plt.show()
 
