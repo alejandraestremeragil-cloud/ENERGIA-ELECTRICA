@@ -1,23 +1,10 @@
-ciudades = [
-    "Zaragoza", "Huesca", "Teruel", "Madrid",
-    "Barcelona", "Valencia", "Bilbao", "San_Sebastian"
-]
+import heapq
+import networkx as nx
+import matplotlib.pyplot as plt
 
-conexiones = {
-    "Zaragoza": [("Huesca", 74), ("Teruel", 171), ("Madrid", 314),
-                 ("Barcelona", 296), ("Valencia", 309), ("Bilbao", 304)],
-    "Bilbao": [("San_Sebastian", 99)],
-    "Huesca": [],
-    "Teruel": [],
-    "Madrid": [],
-    "Barcelona": [],
-    "Valencia": [],
-    "San_Sebastian": []
-}
-
-ENERGIA_INICIAL = 1000  # MWh
-PERDIDA_POR_KM = 0.15  # MWh por km
-
+# =========================
+#   DEFINICIÓN DEL GRAFO
+# =========================
 
 class Grafo:
     def __init__(self):
@@ -64,11 +51,13 @@ def construir_grafo_base():
 
     return g
 
-import heapq
+
+# =========================
+#     ALGORITMO DIJKSTRA
+# =========================
 
 def dijkstra(grafo, origen):
     """
-    Implementación del algoritmo de Dijkstra.
     Calcula la distancia mínima desde 'origen' a todos los nodos del grafo.
 
     Retorna:
@@ -80,17 +69,14 @@ def dijkstra(grafo, origen):
 
     previos = {ciudad: None for ciudad in grafo.adyacencia}
 
-    # Cola de prioridad (min-heap)
-    cola = [(0, origen)]
+    cola = [(0, origen)]  # (distancia, ciudad)
 
     while cola:
         distancia_actual, ciudad_actual = heapq.heappop(cola)
 
-        # Si la distancia es mayor que la registrada, se ignora
         if distancia_actual > distancias[ciudad_actual]:
             continue
 
-        # Explorar vecinos
         for vecino, peso in grafo.obtener_vecinos(ciudad_actual):
             nueva_distancia = distancia_actual + peso
 
@@ -121,13 +107,15 @@ def reconstruir_camino(previos, destino):
 def calcular_energia(distancia_total, energia_inicial, perdida_por_km):
     """
     Calcula la energía restante después de recorrer una distancia.
-    Fórmula:
         energía_final = energía_inicial - (distancia_total * pérdida_por_km)
     """
     energia_final = energia_inicial - (distancia_total * perdida_por_km)
-    return max(energia_final, 0)  # Nunca negativa
+    return max(energia_final, 0)
 
-from dijkstra import dijkstra, reconstruir_camino, calcular_energia
+
+# =========================
+#        SIMULACIÓN
+# =========================
 
 def ejecutar_simulacion(grafo, origen, energia_inicial, perdida_por_km):
     """
@@ -135,15 +123,6 @@ def ejecutar_simulacion(grafo, origen, energia_inicial, perdida_por_km):
     - Calcula distancias mínimas con Dijkstra
     - Reconstruye caminos óptimos
     - Calcula energía que llega a cada ciudad
-
-    Retorna:
-        resultados: lista de diccionarios con:
-            {
-                "ciudad": str,
-                "distancia": float,
-                "camino": list,
-                "energia_final": float
-            }
     """
     distancias, previos = dijkstra(grafo, origen)
 
@@ -165,7 +144,7 @@ def ejecutar_simulacion(grafo, origen, energia_inicial, perdida_por_km):
 
 def imprimir_tabla_resultados(resultados):
     """
-    Imprime una tabla ordenada con:
+    Imprime una tabla con:
     - Ciudad
     - Distancia mínima
     - Energía que llega
@@ -179,9 +158,10 @@ def imprimir_tabla_resultados(resultados):
 
     print("\n")
 
-import networkx as nx
-import matplotlib.pyplot as plt
 
+# =========================
+#      VISUALIZACIÓN
+# =========================
 
 def construir_grafo_networkx(grafo):
     """
@@ -201,11 +181,8 @@ def dibujar_grafo_general(grafo, resultados):
     Dibuja el grafo completo, coloreando los nodos según la energía final.
     """
     G = construir_grafo_networkx(grafo)
-
-    # Posiciones automáticas (puedes cambiarlas a mano si quieres algo más realista)
     pos = nx.spring_layout(G, seed=42)
 
-    # Mapa de energía por ciudad
     energia_por_ciudad = {r["ciudad"]: r["energia_final"] for r in resultados}
     energias = [energia_por_ciudad[n] for n in G.nodes()]
 
@@ -241,7 +218,6 @@ def dibujar_camino_optimo(grafo, resultados, ciudad_destino):
     G = construir_grafo_networkx(grafo)
     pos = nx.spring_layout(G, seed=42)
 
-    # Buscar el resultado de la ciudad destino
     destino_data = next((r for r in resultados if r["ciudad"] == ciudad_destino), None)
     if destino_data is None:
         print(f"No se encontró información para la ciudad: {ciudad_destino}")
@@ -252,14 +228,11 @@ def dibujar_camino_optimo(grafo, resultados, ciudad_destino):
 
     plt.figure(figsize=(10, 7))
 
-    # Nodos
     nx.draw_networkx_nodes(G, pos, node_size=800, node_color="lightgray")
     nx.draw_networkx_labels(G, pos, font_size=9, font_weight="bold")
 
-    # Todas las aristas en gris
     nx.draw_networkx_edges(G, pos, edge_color="lightgray", arrowstyle="->", arrowsize=15)
 
-    # Aristas del camino óptimo en rojo
     nx.draw_networkx_edges(
         G, pos,
         edgelist=aristas_camino,
@@ -269,7 +242,6 @@ def dibujar_camino_optimo(grafo, resultados, ciudad_destino):
         arrowsize=18
     )
 
-    # Etiquetas de pesos
     nx.draw_networkx_edge_labels(
         G, pos,
         edge_labels=nx.get_edge_attributes(G, "weight"),
@@ -281,9 +253,10 @@ def dibujar_camino_optimo(grafo, resultados, ciudad_destino):
     plt.tight_layout()
     plt.show()
 
-from grafo import construir_grafo_base
-from simulacion import ejecutar_simulacion, imprimir_tabla_resultados
-from visualizacion import dibujar_grafo_general, dibujar_camino_optimo
+
+# =========================
+#          MAIN
+# =========================
 
 ENERGIA_INICIAL = 1000
 PERDIDA_POR_KM = 0.15
