@@ -1,3 +1,24 @@
+ciudades = [
+    "Zaragoza", "Huesca", "Teruel", "Madrid",
+    "Barcelona", "Valencia", "Bilbao", "San_Sebastian"
+]
+
+conexiones = {
+    "Zaragoza": [("Huesca", 74), ("Teruel", 171), ("Madrid", 314),
+                 ("Barcelona", 296), ("Valencia", 309), ("Bilbao", 304)],
+    "Bilbao": [("San_Sebastian", 99)],
+    "Huesca": [],
+    "Teruel": [],
+    "Madrid": [],
+    "Barcelona": [],
+    "Valencia": [],
+    "San_Sebastian": []
+}
+
+ENERGIA_INICIAL = 1000  # MWh
+PERDIDA_POR_KM = 0.15  # MWh por km
+
+
 class Grafo:
     def __init__(self):
         self.adyacencia = {}
