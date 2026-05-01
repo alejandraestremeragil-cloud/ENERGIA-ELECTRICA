@@ -1,10 +1,44 @@
 import heapq
 import networkx as nx
 import matplotlib.pyplot as plt
+import math
 
-# =========================
+ciudades_españa = {
+    "Madrid": (40.4168, -3.7038),
+    "Barcelona": (41.3874, 2.1686),
+    "Sevilla": (37.3891, -5.9845),
+    "Valencia": (39.4699, -0.3763),
+    "Zaragoza": (41.6488, -0.8891),
+    "Bilbao": (43.2630, -2.9350),
+    "Málaga": (36.7213, -4.4214),
+    "Murcia": (37.9922, -1.1307),
+    "Valladolid": (41.6523, -4.7245),
+    "Gijón": (43.5322, -5.6611),
+    "A Coruña": (43.3623, -8.4115),
+    "Granada": (37.1773, -3.5986),
+    "Cádiz": (36.5271, -6.2886),
+    "Pamplona": (42.8125, -1.6458),
+    "San_Sebastian": (43.3183, -1.9812)
+}
+
+def distancia_geo(coord1, coord2):
+    R = 6371
+    lat1, lon1 = coord1
+    lat2, lon2 = coord2
+
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+
+    a = (math.sin(dlat/2)**2 +
+         math.cos(math.radians(lat1)) *
+         math.cos(math.radians(lat2)) *
+         math.sin(dlon/2)**2)
+
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    return R * c
+
+
 #   DEFINICIÓN DEL GRAFO
-# =========================
 
 class Grafo:
     def __init__(self):
@@ -52,9 +86,7 @@ def construir_grafo_base():
     return g
 
 
-# =========================
 #     ALGORITMO DIJKSTRA
-# =========================
 
 def dijkstra(grafo, origen):
     """
@@ -113,9 +145,7 @@ def calcular_energia(distancia_total, energia_inicial, perdida_por_km):
     return max(energia_final, 0)
 
 
-# =========================
 #        SIMULACIÓN
-# =========================
 
 def ejecutar_simulacion(grafo, origen, energia_inicial, perdida_por_km):
     """
@@ -149,7 +179,7 @@ def imprimir_tabla_resultados(resultados):
     - Distancia mínima
     - Energía que llega
     """
-    print("\n=== RESULTADOS DE LA SIMULACIÓN ===\n")
+    print("\n RESULTADOS DE LA SIMULACIÓN \n")
     print(f"{'Ciudad':15} {'Distancia (km)':15} {'Energía Final (MWh)':20}")
     print("-" * 55)
 
@@ -158,10 +188,58 @@ def imprimir_tabla_resultados(resultados):
 
     print("\n")
 
+def ciudad_mas_cercana(ciudad_usuario, ciudades_españa, grafo):
+    coord_usuario = ciudades_españa[ciudad_usuario]
 
-# =========================
+    mejor_ciudad = None
+    mejor_distancia = float("inf")
+
+    for ciudad in grafo.adyacencia.keys():
+        if ciudad not in ciudades_españa:
+            continue
+        coord_ciudad = ciudades_españa[ciudad]
+        d = distancia_geo(coord_usuario, coord_ciudad)
+
+        if d < mejor_distancia:
+            mejor_distancia = d
+            mejor_ciudad = ciudad
+
+    return mejor_ciudad, mejor_distancia
+
+def crear_conexion_nueva(grafo, ciudad_grafo, ciudad_usuario, ciudades_españa):
+    # Distancia geográfica real
+    distancia = distancia_geo(ciudades_españa[ciudad_grafo], ciudades_españa[ciudad_usuario])
+
+    # Coste estimado de construcción (ejemplo: 1 millón por km)
+    coste_construccion = distancia * 1_000_000  
+
+    # Añadimos la conexión al grafo como una arista nueva
+    grafo.agregar_conexion(ciudad_grafo, ciudad_usuario, distancia)
+
+    return distancia, coste_construccion
+
+
+def explicar_mejor_ruta(resultados, origen):
+    destinos = [r for r in resultados if r["ciudad"] != origen]
+    mejor = max(destinos, key=lambda r: r["energia_final"])
+
+    ciudad = mejor["ciudad"]
+    energia = mejor["energia_final"]
+    distancia = mejor["distancia"]
+    camino = " → ".join(mejor["camino"])
+
+    print("\n ANÁLISIS DE LA RUTA MÁS EFICIENTE \n")
+    print(f"La ciudad que recibe más energía final es {ciudad}.")
+    print(f"Esto ocurre porque su ruta desde {origen} presenta:")
+    print(f" - Una distancia total de {distancia:.2f} km")
+    print(f" - Un consumo energético menor que el resto de rutas")
+    print(f" - Camino óptimo según Dijkstra: {camino}")
+    print(f"\nEnergía que llega a {ciudad}: {energia:.2f} MWh\n")
+
+    return mejor
+
+
 #      VISUALIZACIÓN
-# =========================
 
 def construir_grafo_networkx(grafo):
     """
@@ -198,6 +276,22 @@ def dibujar_grafo_general(grafo, resultados):
         ax=ax
     )
 
+        # --- NUEVA CONEXIÓN ARTIFICIAL (si existe) ---
+    if hasattr(grafo, "conexion_nueva"):
+        ciudad_grafo, ciudad_usuario = grafo.conexion_nueva
+
+        if ciudad_usuario in G.nodes():
+            nx.draw_networkx_edges(
+                G, pos,
+                edgelist=[(ciudad_grafo, ciudad_usuario)],
+                edge_color="green",
+                width=3,
+                arrowstyle="->",
+                arrowsize=20,
+                ax=ax
+            )
+
+
     nx.draw_networkx_labels(G, pos, font_size=9, font_weight="bold", ax=ax)
     nx.draw_networkx_edges(G, pos, arrowstyle="->", arrowsize=15, ax=ax)
     nx.draw_networkx_edge_labels(
@@ -215,6 +309,7 @@ def dibujar_grafo_general(grafo, resultados):
     ax.set_axis_off()
     plt.tight_layout()
     plt.show()
+
 
 
 def dibujar_camino_optimo(grafo, resultados, ciudad_destino):
@@ -259,6 +354,17 @@ def dibujar_camino_optimo(grafo, resultados, ciudad_destino):
     plt.tight_layout()
     plt.show()
 
+def explicar_rentabilidad(distancia, coste, energia_final):
+    print("\n=== ANÁLISIS DE RENTABILIDAD ===\n")
+    print(f"Distancia de la nueva línea: {distancia:.2f} km")
+    print(f"Coste estimado de construcción: {coste:,.0f} €")
+    print(f"Energía que llegaría a la ciudad destino: {energia_final:.2f} MWh")
+
+    if energia_final < 500:
+        print("\nConclusión: NO sería rentable construir esta línea.")
+    else:
+        print("\nConclusión: Podría ser rentable dependiendo de la demanda.")
+
 
 # =========================
 #          MAIN
@@ -272,15 +378,24 @@ ORIGEN = "Zaragoza"
 def main():
     grafo = construir_grafo_base()
 
+    ciudad_usuario = input("¿En qué ciudad vives? (Ej: Sevilla): ")
+
+    if ciudad_usuario not in ciudades_españa:
+        print("Esa ciudad no está en la base de datos.")
+        return
+
+    ciudad_cercana, distancia_cercana = ciudad_mas_cercana(ciudad_usuario, ciudades_españa, grafo)
+
+    print(f"\nLa ciudad del sistema eléctrico más cercana a {ciudad_usuario} es {ciudad_cercana}, a {distancia_cercana:.2f} km.")
+    print("La energía se transportará desde Zaragoza hasta ese nodo.\n")
+
     resultados = ejecutar_simulacion(grafo, ORIGEN, ENERGIA_INICIAL, PERDIDA_POR_KM)
     imprimir_tabla_resultados(resultados)
 
-    # Visualización general
+    explicar_mejor_ruta(resultados, ORIGEN)
+
     dibujar_grafo_general(grafo, resultados)
-
-    # Ejemplo: resaltar camino óptimo a Barcelona
-    dibujar_camino_optimo(grafo, resultados, "Barcelona")
-
+    dibujar_camino_optimo(grafo, resultados, ciudad_cercana)
 
 if __name__ == "__main__":
     main()
