@@ -14,10 +14,10 @@ import os
 
 MENSAJE_CIERZO = """
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║         RED DE DISTRIBUCIÓN ELÉCTRICA – ZARAGOZA COMO NODO CENTRAL         ║
+║         RED DE DISTRIBUCIÓN ELÉCTRICA – ZARAGOZA COMO NODO CENTRAL           ║
 ╠══════════════════════════════════════════════════════════════════════════════╣
 ║                                                                              ║
-║  Zaragoza se sitúa en el Valle del Ebro, donde el CIERZO —un viento fuerte  ║
+║  Zaragoza se sitúa en el Valle del Ebro, donde el CIERZO —un viento fuerte   ║
 ║  y constante del noroeste— convierte a Aragón en uno de los territorios con  ║
 ║  mayor potencial eólico de España.                                           ║
 ║                                                                              ║
