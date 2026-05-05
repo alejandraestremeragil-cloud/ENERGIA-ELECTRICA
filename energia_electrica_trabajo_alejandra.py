@@ -8,12 +8,6 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
-# =============================================================================
-#   RED DE DISTRIBUCIÓN ELÉCTRICA – ARAGÓN Y PENÍNSULA IBÉRICA
-#   Algoritmo: Dijkstra (rutas de menor pérdida energética)
-#   Incluye: modo fallo aleatorio, exportación CSV, input de ciudad destino
-# =============================================================================
-
 MENSAJE_CIERZO = """
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║        RED DE DISTRIBUCIÓN ELÉCTRICA – ZARAGOZA COMO NODO CENTRAL            ║
@@ -51,9 +45,7 @@ MENSAJE_CIERZO = """
 ╚══════════════════════════════════════════════════════════════════════════════╝
 """
 
-# ─────────────────────────────────────────────────────────────────────────────
 #   BASE DE DATOS: COORDENADAS DE LAS 47 PROVINCIAS PENINSULARES
-# ─────────────────────────────────────────────────────────────────────────────
 
 coordenadas = {
     "Zaragoza":      (41.6488, -0.8891),
@@ -105,9 +97,7 @@ coordenadas = {
     "Murcia":        (37.9922, -1.1307),
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
-#   VECINDADES REALES (conexiones entre provincias limítrofes)
-# ─────────────────────────────────────────────────────────────────────────────
+#   Conexiones entre provincias 
 
 vecindades = {
     "Zaragoza":    ["Huesca","Teruel","Lleida","Tarragona","Guadalajara",
@@ -556,7 +546,7 @@ def exportar_excel(resultados_normal, resultados_fallo, fallo,
     ws.freeze_panes = "A4"
 
     wb.save(ruta_archivo)
-    print(f"  ✓  Excel exportado: {os.path.abspath(ruta_archivo)}\n")
+    print(f" Excel exportado: {os.path.abspath(ruta_archivo)}\n")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -595,11 +585,11 @@ def analizar_impacto_fallo(res_normal, res_fallo, fallo):
                                  rn["energia"]   - rf["energia"]))
 
     if sin_sum:
-        print(f"\n  ⚠  Provincias SIN SUMINISTRO:")
+        print(f"\n Provincias SIN SUMINISTRO:")
         for c in sin_sum:
             print(f"       • {c}")
     else:
-        print(f"\n  ✓  Todas las provincias conservan ruta alternativa.")
+        print(f"\n  Todas las provincias conservan ruta alternativa.")
 
     if alternativas:
         print(f"\n  Provincias con ruta alternativa (mayor pérdida):")
@@ -616,9 +606,7 @@ def analizar_impacto_fallo(res_normal, res_fallo, fallo):
     print()
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 #   COLORES POR COMUNIDAD AUTÓNOMA
-# ─────────────────────────────────────────────────────────────────────────────
 
 CCAA = {
     "Aragón":               ["Zaragoza", "Huesca", "Teruel"],
@@ -672,10 +660,7 @@ def _ciudad_a_ccaa(ciudad):
             return ccaa
     return "Desconocida"
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 #   VISUALIZACIÓN
-# ─────────────────────────────────────────────────────────────────────────────
 
 def _pos():
     return {c: (coord[1], coord[0]) for c, coord in coordenadas.items()}
@@ -961,7 +946,7 @@ def dibujar_comparacion_destino(g_orig, g_averia,
     # Mapa derecho: tras avería
     if dato_averia is None or dato_averia["distancia"] == float('inf'):
         _pintar(axes[1], G_av, G_orig, [],
-                f"⚠️  AVERÍA: {origen_f} → {destino_f} ({km_f} km)\n"
+                f" AVERÍA: {origen_f} → {destino_f} ({km_f} km)\n"
                 f"{destino} queda SIN SUMINISTRO — no hay ruta alternativa",
                 color_arista="red",
                 arista_cortada=(origen_f, destino_f),
@@ -987,10 +972,7 @@ def dibujar_comparacion_destino(g_orig, g_averia,
     plt.tight_layout()
     plt.show()
 
-
-# ─────────────────────────────────────────────────────────────────────────────
 #   ANÁLISIS COMBINADO: RUTA ÓPTIMA + FALLO EN ESA RUTA + ALTERNATIVA
-# ─────────────────────────────────────────────────────────────────────────────
 
 def analizar_destino_con_fallo(grafo_original, destino):
     """
@@ -1021,19 +1003,19 @@ def analizar_destino_con_fallo(grafo_original, destino):
     print(f"  Pérdida energética: {ENERGIA_INICIAL - dato_normal['energia']:.1f} MWh")
     print(f"  Saltos:             {dato_normal['saltos']}")
 
-    # ── Paso 2: fallo aleatorio en un tramo de la ruta óptima ────────────────
+    # ── Paso 2: fallo aleatorio en un tramo de la ruta óptima 
     tramo_fallo = random.choice(tramos_ruta)
     origen_f, destino_f = tramo_fallo
     km_fallo = next(p for v, p in grafo_original.obtener_vecinos(origen_f)
                     if v == destino_f)
 
     print(f"\n{'='*68}")
-    print(f"  ⚡ AVERÍA SIMULADA EN LA RUTA")
+    print(f"  AVERÍA SIMULADA EN LA RUTA")
     print(f"  Tramo cortado: {origen_f} → {destino_f}  ({km_fallo} km)")
     print(f"  Este tramo forma parte del recorrido óptimo.")
     print(f"{'='*68}")
 
-    # ── Paso 3: recalcular con la línea rota ─────────────────────────────────
+    # ── Paso 3: recalcular con la línea rota 
     grafo_averia = construir_grafo()
     grafo_averia.eliminar_conexion(origen_f, destino_f)
     res_averia   = ejecutar_simulacion(grafo_averia)
@@ -1041,11 +1023,11 @@ def analizar_destino_con_fallo(grafo_original, destino):
 
     fallo = (origen_f, destino_f, km_fallo)
 
-    # ── Paso 4: mostrar impacto ───────────────────────────────────────────────
+    # ── Paso 4: mostrar impacto 
     print(f"\n  RESULTADO TRAS LA AVERÍA:")
     if dato_averia is None or dato_averia["distancia"] == float('inf'):
-        print(f"\n  ✗  {destino} queda SIN SUMINISTRO.")
-        print(f"     No existe ninguna ruta alternativa con la línea cortada.")
+        print(f"\n  {destino} queda SIN SUMINISTRO.")
+        print(f" No existe ninguna ruta alternativa con la línea cortada.")
     else:
         aumento_km   = dato_averia["distancia"] - dato_normal["distancia"]
         perdida_mwh  = dato_normal["energia"]   - dato_averia["energia"]
@@ -1057,7 +1039,7 @@ def analizar_destino_con_fallo(grafo_original, destino):
         print(f"  Pérdida total:      {ENERGIA_INICIAL - dato_averia['energia']:.1f} MWh")
         print(f"  Saltos:             {dato_averia['saltos']}")
 
-    # ── Paso 5: visualizaciones ───────────────────────────────────────────────
+    # ── Paso 5: visualizaciones 
     dibujar_ruta_destino(grafo_original, res_normal, destino)
     dibujar_comparacion_destino(grafo_original, grafo_averia,
                                  dato_normal, dato_averia,
@@ -1160,7 +1142,7 @@ def dibujar_comparacion_destino(g_orig, g_averia,
             axes[1], G_averia, G_orig,
             [],
             f"AVERÍA {origen_f} → {destino_f} ({km_f} km)\n"
-            f"⚠ {destino} queda SIN SUMINISTRO",
+            f" {destino} queda SIN SUMINISTRO",
             color_camino="red",
             arista_cortada=(origen_f, destino_f)
         )
@@ -1184,9 +1166,8 @@ def dibujar_comparacion_destino(g_orig, g_averia,
     plt.show()
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 #   SIMULACIÓN EN TIEMPO REAL – ANIMACIÓN DE LA ENERGÍA VIAJANDO
-# ─────────────────────────────────────────────────────────────────────────────
+
 
 def simular_tiempo_real(grafo, camino_normal, camino_averia, fallo, destino):
     """
@@ -1222,7 +1203,7 @@ def simular_tiempo_real(grafo, camino_normal, camino_averia, fallo, destino):
     en_normal = energias_por_salto(camino_normal)
     en_averia = energias_por_salto(camino_averia) if camino_averia else []
 
-    # ── Layout: mapa arriba, panel info + barra abajo ─────────────────────────
+    # ── Layout: mapa arriba, panel info + barra abajo 
     fig = plt.figure(figsize=(20, 13))
     fig.patch.set_facecolor("#0D1117")
 
@@ -1239,11 +1220,11 @@ def simular_tiempo_real(grafo, camino_normal, camino_averia, fallo, destino):
 
     # Título global
     fig.text(0.5, 0.97,
-             f"⚡  Simulación en tiempo real: {ORIGEN} → {destino}",
+             f" Simulación en tiempo real: {ORIGEN} → {destino}",
              ha="center", va="top", fontsize=15, fontweight="bold",
              color="white", fontfamily="monospace")
 
-    # ── Fondo del mapa: nodos grises por CCAA ────────────────────────────────
+    # ── Fondo del mapa: nodos grises por CCAA 
     def dibujar_fondo():
         ax_mapa.clear(); ax_mapa.set_axis_off()
         ax_mapa.set_facecolor("#0D1117")
@@ -1326,7 +1307,7 @@ def simular_tiempo_real(grafo, camino_normal, camino_averia, fallo, destino):
                       fontsize=9, color="white", fontweight="bold",
                       fontfamily="monospace", transform=ax_barra.transAxes)
 
-    # ── Animación fase 1: ruta normal ─────────────────────────────────────────
+    # ── Animación fase 1: ruta normal 
     PAUSA_SALTO    = 0.9    # segundos entre saltos
     PAUSA_AVERIA   = 3.5    # pausa dramática en la avería
     PAUSA_REANUDA  = 0.7
@@ -1470,7 +1451,7 @@ def simular_tiempo_real(grafo, camino_normal, camino_averia, fallo, destino):
                           f"{en_averia[i-idx_averia_alt]:.1f} MWh")
             plt.pause(PAUSA_REANUDA)
 
-    # ── Pantalla final de comparación ─────────────────────────────────────────
+    # ── Pantalla final de comparación 
     plt.ioff()
     dibujar_fondo()
 
@@ -1546,8 +1527,6 @@ def simular_tiempo_real(grafo, camino_normal, camino_averia, fallo, destino):
     plt.show()
 
 
-
-
 def main():
     print(MENSAJE_CIERZO)
 
@@ -1587,9 +1566,9 @@ def main():
                      if dato_averia and dato_averia["distancia"] != float('inf')
                      else None)
     respuesta = input(
-        "\n¿Quieres ver la simulación animada en tiempo real? (s/n): "
+        "\n¿Quieres ver la simulación animada en tiempo real?: "
     ).strip().lower()
-    if respuesta == "s":
+    if respuesta == "si":
         simular_tiempo_real(grafo_original,
                             dato_normal["camino"],
                             camino_averia,
