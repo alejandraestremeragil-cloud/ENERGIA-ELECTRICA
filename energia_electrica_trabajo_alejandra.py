@@ -1585,7 +1585,7 @@ def main():
     try:
         exportar_excel(res_normal, res_fallo, fallo, ruta_excel)
     except PermissionError:
-        print("  ⚠  No se pudo guardar el Excel: cierra el archivo si está abierto.")
+        print(" No se pudo guardar el Excel: cierra el archivo si está abierto.")
         ruta_alt = os.path.join(ruta_script, "red_electrica_nuevo.xlsx")
         exportar_excel(res_normal, res_fallo, fallo, ruta_alt)
 
