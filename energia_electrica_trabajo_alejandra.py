@@ -1550,9 +1550,9 @@ def main():
                      if dato_averia and dato_averia["distancia"] != float('inf')
                      else None)
     respuesta = input(
-        "\n¿Quieres ver la simulación animada en tiempo real? (s/n): "
+        "\n¿Quieres ver la simulación animada en tiempo real?: "
     ).strip().lower()
-    if respuesta == "s":
+    if respuesta == "si":
         simular_tiempo_real(grafo_original,
                             dato_normal["camino"],
                             camino_averia,
