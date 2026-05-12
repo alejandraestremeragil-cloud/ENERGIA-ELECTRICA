@@ -119,10 +119,3 @@ Cada comunidad tiene un color propio en el mapa para facilitar la lectura:
 | `openpyxl` | Generación del Excel formateado |
 | `math` | Cálculo de distancias geodésicas (fórmula de Haversine) |
 | `random` | Selección aleatoria del tramo en avería |
-
----
-
-## 👤 Autor
-
-Proyecto de la asignatura **Estructuras de Datos y Algoritmos**.  
-Universidad Alfonso X el Sabio — curso 2024/2025.
